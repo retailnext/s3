@@ -3,7 +3,6 @@ package s3util
 import (
 	"bytes"
 	"encoding/xml"
-	"github.com/kr/s3"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,14 +11,20 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/kr/s3"
 )
 
 // defined by amazon
 const (
-	minPartSize = 5 * 1024 * 1024
-	maxPartSize = 1<<31 - 1 // for 32-bit use; amz max is 5GiB
-	maxObjSize  = 5 * 1024 * 1024 * 1024 * 1024
-	maxNPart    = 10000
+	minPartSize = 10 * 1024 * 1024
+
+	// maxPartSize = 1<<31 - 1 // for 32-bit use; amz max is 5GiB
+	//NB: 134MB so we don't use too much memory at once
+	maxPartSize = 1 << 27
+
+	maxObjSize = 5 * 1024 * 1024 * 1024 * 1024
+	maxNPart   = 10000
 )
 
 const (
@@ -84,6 +89,7 @@ func newUploader(url string, h http.Header, c *Config) (u *uploader, err error) 
 		u.client = http.DefaultClient
 	}
 	u.bufsz = minPartSize
+	u.buf = make([]byte, int(u.bufsz))
 	r, err := http.NewRequest("POST", url+"?uploads", nil)
 	if err != nil {
 		return nil, err
@@ -122,17 +128,10 @@ func (u *uploader) Write(p []byte) (n int, err error) {
 		return 0, u.err
 	}
 	for n < len(p) {
-		if cap(u.buf) == 0 {
-			u.buf = make([]byte, int(u.bufsz))
-			// Increase part size (1.001x).
-			// This lets us reach the max object size (5TiB) while
-			// still doing minimal buffering for small objects.
-			u.bufsz = min(u.bufsz+u.bufsz/1000, maxPartSize)
-		}
 		r := copy(u.buf[u.off:], p[n:])
 		u.off += r
 		n += r
-		if u.off == len(u.buf) {
+		if u.off == cap(u.buf) {
 			u.flush()
 		}
 	}
@@ -142,10 +141,12 @@ func (u *uploader) Write(p []byte) (n int, err error) {
 func (u *uploader) flush() {
 	u.wg.Add(1)
 	u.part++
-	p := &part{bytes.NewReader(u.buf[:u.off]), int64(u.off), u.part, ""}
+	buf := make([]byte, u.off)
+	copy(buf, u.buf[:u.off])
+	p := &part{bytes.NewReader(buf), int64(u.off), u.part, ""}
 	u.xml.Part = append(u.xml.Part, p)
 	u.ch <- p
-	u.buf, u.off = nil, 0
+	u.off = 0
 }
 
 func (u *uploader) worker() {
@@ -202,7 +203,7 @@ func (u *uploader) Close() error {
 	if u.closed {
 		return syscall.EINVAL
 	}
-	if cap(u.buf) > 0 {
+	if u.off > 0 {
 		u.flush()
 	}
 	u.wg.Wait()
