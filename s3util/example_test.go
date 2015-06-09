@@ -1,14 +1,19 @@
 package s3util_test
 
 import (
-	"github.com/kr/s3/s3util"
 	"io"
 	"os"
+
+	"github.com/kr/s3"
+	"github.com/kr/s3/s3util"
 )
 
 func ExampleCreate() {
-	s3util.DefaultConfig.AccessKey = "...access key..."
-	s3util.DefaultConfig.SecretKey = "...secret key..."
+	keys := &s3.StaticKeys{
+		AccessKeyValue: "...access key...",
+		SecretKeyValue: "...secret key...",
+	}
+	s3util.DefaultConfig.Keys = keys
 	r, _ := os.Open("/dev/stdin")
 	w, _ := s3util.Create("https://mybucket.s3.amazonaws.com/log.txt", nil, nil)
 	io.Copy(w, r)
@@ -16,8 +21,11 @@ func ExampleCreate() {
 }
 
 func ExampleOpen() {
-	s3util.DefaultConfig.AccessKey = "...access key..."
-	s3util.DefaultConfig.SecretKey = "...secret key..."
+	keys := &s3.StaticKeys{
+		AccessKeyValue: "...access key...",
+		SecretKeyValue: "...secret key...",
+	}
+	s3util.DefaultConfig.Keys = keys
 	r, _ := s3util.Open("https://mybucket.s3.amazonaws.com/log.txt", nil)
 	w, _ := os.Create("out.txt")
 	io.Copy(w, r)

@@ -17,7 +17,7 @@ func Open(url string, c *Config) (io.ReadCloser, error) {
 	// TODO(kr): maybe parallel range fetching
 	r, _ := http.NewRequest("GET", url, nil)
 	r.Header.Set("Date", time.Now().UTC().Format(http.TimeFormat))
-	c.Sign(r, *c.Keys)
+	c.Sign(r, c.Keys)
 	resp, err := http.DefaultClient.Do(r)
 	if err != nil {
 		return nil, err

@@ -16,10 +16,10 @@ import (
 
 var DefaultConfig = &Config{
 	Service: s3.DefaultService,
-	Keys:    new(s3.Keys),
+	Keys:    new(s3.StaticKeys),
 }
 
 type Config struct {
 	*s3.Service
-	*s3.Keys
+	Keys s3.Keys
 }

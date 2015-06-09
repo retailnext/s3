@@ -3,7 +3,6 @@ package s3util
 import (
 	"bytes"
 	"encoding/xml"
-	"github.com/kr/s3"
 	"io"
 	"net/http"
 	"net/url"
@@ -11,6 +10,8 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/kr/s3"
 )
 
 // defined by amazon
@@ -80,7 +81,7 @@ func newUploader(url string, h http.Header, c *Config) (u *uploader, err error) 
 	u = new(uploader)
 	u.s3 = *c.Service
 	u.url = url
-	u.keys = *c.Keys
+	u.keys = c.Keys
 	u.bufsz = minPartSize
 	u.buf = make([]byte, int(u.bufsz))
 	r, err := http.NewRequest("POST", url+"?uploads", nil)

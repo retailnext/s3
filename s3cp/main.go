@@ -22,15 +22,21 @@ package main
 
 import (
 	"fmt"
-	"github.com/kr/s3/s3util"
 	"io"
 	"os"
 	"strings"
+
+	"github.com/kr/s3"
+	"github.com/kr/s3/s3util"
 )
 
 func main() {
-	s3util.DefaultConfig.AccessKey = os.Getenv("S3_ACCESS_KEY")
-	s3util.DefaultConfig.SecretKey = os.Getenv("S3_SECRET_KEY")
+	keys := &s3.StaticKeys{
+		AccessKeyValue: os.Getenv("S3_ACCESS_KEY"),
+		SecretKeyValue: os.Getenv("S3_SECRET_KEY"),
+	}
+
+	s3util.DefaultConfig.Keys = keys
 	args := os.Args[1:]
 	if len(args) != 2 {
 		fmt.Fprintln(os.Stderr, "Usage: s3cp file url")
