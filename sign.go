@@ -40,16 +40,33 @@ var signParams = map[string]bool{
 	"website":                      true,
 }
 
-// Keys holds a set of Amazon Security Credentials.
-type Keys struct {
-	AccessKey string
-	SecretKey string
+type Keys interface {
+	AccessKey() string
+	SecretKey() string
+	SecurityToken() string
+}
 
+// Keys holds a set of Amazon Security Credentials.
+type StaticKeys struct {
+	AccessKeyValue string
+	SecretKeyValue string
 	// SecurityToken is used for temporary security credentials.
 	// If set, it will be added to header field X-Amz-Security-Token
 	// before signing a request.
-	SecurityToken string
 	// See http://docs.aws.amazon.com/AmazonS3/latest/dev/MakingRequests.html#TypesofSecurityCredentials
+	SecurityTokenValue string
+}
+
+func (k StaticKeys) AccessKey() string {
+	return k.AccessKeyValue
+}
+
+func (k StaticKeys) SecretKey() string {
+	return k.SecretKeyValue
+}
+
+func (k StaticKeys) SecurityToken() string {
+	return k.SecurityTokenValue
 }
 
 // IdentityBucket returns subdomain.
@@ -96,14 +113,14 @@ type Service struct {
 
 // Sign signs an HTTP request with the given S3 keys for use on service s.
 func (s *Service) Sign(r *http.Request, k Keys) {
-	if k.SecurityToken != "" {
-		r.Header.Set("X-Amz-Security-Token", k.SecurityToken)
+	if k.SecurityToken() != "" {
+		r.Header.Set("X-Amz-Security-Token", k.SecurityToken())
 	}
-	h := hmac.New(sha1.New, []byte(k.SecretKey))
+	h := hmac.New(sha1.New, []byte(k.SecretKey()))
 	s.writeSigData(h, r)
 	sig := make([]byte, base64.StdEncoding.EncodedLen(h.Size()))
 	base64.StdEncoding.Encode(sig, h.Sum(nil))
-	r.Header.Set("Authorization", "AWS "+k.AccessKey+":"+string(sig))
+	r.Header.Set("Authorization", "AWS "+k.AccessKey()+":"+string(sig))
 }
 
 func (s *Service) writeSigData(w io.Writer, r *http.Request) {

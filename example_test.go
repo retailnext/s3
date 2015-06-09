@@ -2,18 +2,19 @@ package s3_test
 
 import (
 	"fmt"
-	"github.com/kr/s3"
 	"log"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/kr/s3"
 )
 
 func ExampleSign() {
-	keys := s3.Keys{
-		AccessKey: os.Getenv("S3_ACCESS_KEY"),
-		SecretKey: os.Getenv("S3_SECRET_KEY"),
+	keys := s3.StaticKeys{
+		AccessKeyValue: os.Getenv("S3_ACCESS_KEY"),
+		SecretKeyValue: os.Getenv("S3_SECRET_KEY"),
 	}
 	data := strings.NewReader("hello, world")
 	r, _ := http.NewRequest("PUT", "https://example.s3.amazonaws.com/foo", data)

@@ -83,7 +83,7 @@ func newUploader(url string, h http.Header, c *Config) (u *uploader, err error) 
 	u = new(uploader)
 	u.s3 = *c.Service
 	u.url = url
-	u.keys = *c.Keys
+	u.keys = c.Keys
 	u.client = c.Client
 	if u.client == nil {
 		u.client = http.DefaultClient
