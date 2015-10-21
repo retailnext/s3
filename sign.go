@@ -2,7 +2,7 @@
 package s3
 
 // See
-// http://docs.amazonwebservices.com/AmazonS3/2006-03-01/dev/RESTAuthentication.html.
+// http://docs.amazonwebservices.com/AmazonS3/latest/dev/RESTAuthentication.html.
 
 import (
 	"crypto/hmac"

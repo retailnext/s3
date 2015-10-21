@@ -27,7 +27,7 @@ func runUpload(t *testing.T, makeCloser func(io.Reader) io.ReadCloser) *uploader
 				t.Fatal("unexpected request", req)
 			}
 			resp := &http.Response{
-				StatusCode: 200,
+				StatusCode: http.StatusOK,
 				Body:       makeCloser(strings.NewReader(s)),
 				Header: http.Header{
 					"Etag": {`"foo"`},
@@ -135,8 +135,8 @@ func TestEmptyEtag(t *testing.T) {
 	c.Client = &http.Client{
 		Transport: RoundTripperFunc(func(req *http.Request) (*http.Response, error) {
 			resp := &http.Response{
-				StatusCode: 200,
-				Body: body,
+				StatusCode: http.StatusOK,
+				Body:       body,
 				Header: http.Header{
 					"Etag": {""},
 				},

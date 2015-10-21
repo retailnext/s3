@@ -106,7 +106,7 @@ func newUploader(url string, h http.Header, c *Config) (u *uploader, err error) 
 		return nil, err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		return nil, newRespError(resp)
 	}
 	err = xml.NewDecoder(resp.Body).Decode(u)
@@ -188,7 +188,7 @@ func (u *uploader) putPart(p *part) error {
 		return err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		return newRespError(resp)
 	}
 	s := resp.Header.Get("etag") // includes quote chars for some reason
@@ -230,10 +230,10 @@ func (u *uploader) Close() error {
 		if err != nil {
 			return err
 		}
-		if resp.StatusCode != 200 {
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
 			return newRespError(resp)
 		}
-		resp.Body.Close()
 		return nil
 	}
 
@@ -254,10 +254,10 @@ func (u *uploader) Close() error {
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != 200 {
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
 		return newRespError(resp)
 	}
-	resp.Body.Close()
 	return nil
 }
 
@@ -278,7 +278,7 @@ func (u *uploader) abort() {
 		return
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		return
 	}
 }

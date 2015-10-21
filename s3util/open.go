@@ -26,7 +26,7 @@ func Open(url string, c *Config) (io.ReadCloser, error) {
 	if err != nil {
 		return nil, err
 	}
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		return nil, newRespError(resp)
 	}
 	return resp.Body, nil
